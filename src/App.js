@@ -12,6 +12,7 @@ import { Email } from './component/Email';
 import {PN} from './component/PN';
 import {SMS} from './component/SMS';
 import { Footer } from './component/Footer';
+import { AddStudent } from './component/AddStudent';
 
 
 function App() {
@@ -43,10 +44,12 @@ function App() {
           </Route>
           <Route exact path='/Push Notification' element={<PN/>}>
           </Route>
+          <Route exact path='/addStudent' element={<AddStudent/>}>
+          </Route>
           
         </Routes>
 
-        <Footer/>
+        {/* <Footer/> */}
       </div>
 
     </>

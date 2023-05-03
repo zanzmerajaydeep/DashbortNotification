@@ -1,19 +1,27 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Button, CardBody, CardSubtitle, CardText, CardTitle, CardImg, Table, Row, Col } from 'reactstrap'
+import { Card, Button, CardBody, CardSubtitle, CardText, CardTitle, CardImg, Table, Row, Col, Link, NavItem, NavLink } from 'reactstrap'
 import { Emailbase_url } from '../assest/base_url';
+import { NavLink as reactlink } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+
 
 export const Email = () => {
 
     const [Students, setStudent] = useState([]);
-    const [ReqResponse, setReqResponse] = useState([]);
-    const [errorResponse,setErrorResponse]=useState([]);
 
+    const [ReqResponse, setReqResponse] = useState([]);
+    const [errorResponse, setErrorResponse] = useState([]);
+    const [errorResponse1, setErrorResponse1] = useState([]);
+
+
+
+    //get all email data----------
     useEffect(() => {
 
         axios.get(`${Emailbase_url}/getAllStudent`).then(
             (response) => {
-               
+
                 // console.log(response.data);
                 setStudent(response.data)
             },
@@ -24,51 +32,55 @@ export const Email = () => {
 
     }, []);
 
+    //for send All--------------
     const sendAllEmail = () => {
         axios.post(`${Emailbase_url}/sendmail`).then(
             (res) => {
-                let arr=res.data;
-                console.log("arr",typeof arr);
-                alert("success all email")  //array 
-                
-                console.log("send all email,",res.data)
-                setReqResponse([...ReqResponse,...res.data])
-                console.log(ReqResponse)
+
+                Array.from(res.data).map((data) => {
+                    if (data.statusCodeValue != 200) {
+                        toast.error("Status Code : " + data.statusCodeValue);
+
+                    }
+                    else {
+                        toast.success("Status Code : " + data.statusCodeValue);
+
+                    }
+
+                })
+                setReqResponse([...ReqResponse, ...res.data])
+
             },
             (error) => {
                 setReqResponse(error)
-                alert("failure all email")
+                alert("Error : Something wrong!")
 
-                console.log("send all email error",error)
             }
         );
     }
 
+    //-------------------for Email By Email-----------------------------------------------------
+
     const sendEmailByEmail = (studentEmail) => {
-        axios.post(`${Emailbase_url}/sendmailByEmail`,studentEmail,{
-            headers:{
-                "Content-Type":"application/json"
+
+        axios.post(`${Emailbase_url}/sendmailByEmail`, studentEmail, {
+            headers: {
+                "Content-Type": "application/json"
             },
         }).then(
             (response) => {
-                alert("success")
-                console.log([...errorResponse,response]) //object
-                setReqResponse([...errorResponse,response])
 
-                // setReqResponse(res.data)
-                // setErrorResponse([...errorResponse,error])  
-
-               
-            },
-            (error) => {
-                alert("error")
-                console.log(error) 
-                setErrorResponse([...errorResponse,error])  
-                
-                // setReqResponse([...ReqResponse, Array.from(error.response)])
-                
+                toast.success("Status Code : " + response.status);
+                setErrorResponse([...errorResponse, response])
             }
-        );
+
+        ).catch((error) => {
+            alert(error)
+            console.log("error" + error)
+            // setErrorResponse1([...errorResponse1, error])
+            // toast.error(error.response.data);
+
+        });
     }
 
 
@@ -78,15 +90,15 @@ export const Email = () => {
             <div className='home'>
 
                 <div className='contain'>
-                    <Row style={{height:'400px'}}>
-                        <Col  md={7} >
+                    <Row style={{ height: '400px' }}>
+                        <Col md={7} >
                             <h3 style={{ margin: '30px' }}><strong>Streamline Your Email Workflow with NotifyMe.com </strong></h3 >
                             {/* <p className='containparagraph' >NotifyMe.com's Email Service is a REST-based component that provides a simple and reliable way to send customizable and personalized email notifications. The service supports multiple email providers and configurable templates, ensuring consistent branding and reliable email delivery.</p> */}
-                            <h5 style={{ margin: '30px' }}>Here one use case of Email Service :</h5>
+                            <h5 style={{ margin: '30px' }}>Here one use case  :</h5>
                             <p className='containparagraph' >Notifyme.com: Send personalized email notifications to all students about their internal semester results. Easily integrate your student database and keep students informed with just a few clicks.</p>
-                            
+
                         </Col>
-                        <Col md={5} style={{marginTop:'20px'}} >
+                        <Col md={5} style={{ marginTop: '20px' }} >
                             <div className='emailCardBody'>
                                 <Card className='emailCard' onClick={sendAllEmail}>
                                     <CardTitle><strong>Email </strong></CardTitle>
@@ -95,15 +107,20 @@ export const Email = () => {
                                 <CardSubtitle ></CardSubtitle>
                             </div>
                             <div className='iconHeader'>
-                            <h5 >Click email icon to email all students.</h5>
+                                <h5 >Click email icon to email all students.</h5>
                             </div>
                         </Col>
                     </Row>
                 </div>
 
+
                 <div className='table'>
-                    <header className='headertable'>
-                        <h2>Student Data</h2>
+
+                    <header className='headertable'      >
+
+                            <NavLink style={{alignSelf:'revert'}} tag={reactlink} to="/addStudent" class="btn "><Button>Add Student</Button> </NavLink>
+                        <h2 >Student Data</h2>
+
                     </header>
                     <Table
                         bordered
@@ -146,7 +163,7 @@ export const Email = () => {
                                             <td>{student.studentMentorName}</td>
                                             <td>{student.studentUniversity}</td>
                                             <td>{student.studentContactno}</td>
-                                            <td><Button onClick={()=>sendEmailByEmail(student.studentEmail)}>Send</Button></td>
+                                            <td><Button onClick={() => sendEmailByEmail(student.studentEmail)}>Send</Button></td>
                                         </tr>
                                     </tbody>
                                 </>)
@@ -155,60 +172,89 @@ export const Email = () => {
                     </Table>
                 </div>
 
-                <div style={{margin:'20px'}}>
-                    {/* {Array.from(ReqResponse).map((res, i) => { */}
+                <div style={{ margin: '20px' }}>
+
+                    {/* //-------------for singal one-------------------- */}
                     <header className='errorHeader'>
-                        <h4>Request Response Data</h4>
+                        <h4>Singal Request Response Data</h4>
+                    </header>
+
+                    <div>
+
+                        {
+                            Array.from(errorResponse).map((res, i) => {
+
+                                return (<>
+
+                                    <p key={i}>
+
+                                        ({i + 1})
+                                        {/* DateTime : {res.headers?.Date}<br /> */}
+                                        Response : <span style={{ color: res.status == 200 ? "green" : "red" }}>  {res.data}</span> Status Code : <strong>{res.status}</strong><br />
+
+
+                                        <hr></hr>
+                                    </p>
+
+
+                                </>
+                                )
+                            })
+                        }
+                        {
+                            Array.from(errorResponse1).map((res, i) => {
+
+                                return (<>
+                                    {/* 
+                                    <p key={i}>
+
+                                        ({errorResponse.length + i + 1})
+                                      
+                                        Response : <span style={{ color: res.response.status == 200 ? "green" : "red" }}>  {res.response.data}</span><br />
+                                        Status Code : {res.response.status}<br />
+
+                                        <hr></hr>
+                                    </p> */}
+
+
+
+                                </>
+                                )
+                            })
+                        }
+
+                    </div>
+
+
+
+                    <header className='errorHeader'>
+                        <h4>Multiple Request Response Data</h4>
                     </header>
                     <div >
                         {
-                            
-                            Array.from(ReqResponse).map((res,i) => {
-                             
-                                    return (<>
-                                   
-                                        <p key={i} >
-                                            
-                                        ({i+1}) 
-                                        DateTime : {res.headers?.Date}<br/>
-                                        Response : <span style={{color:res.statusCodeValue==200? "green":"red"}}>  {res.body}</span><br/> 
-                                        Status Code : {res.statusCodeValue}<br/>
-                                        {/* Status Code value : {res.statusCodeValue}<br/> */}
-                                        <hr></hr>
-                                        </p>
-                                    
-    
-                                    </>
-                                    ) 
-                            })
-                            
-                        }
-                        {
-                             Array.from(errorResponse).map((res,i) => {
-                             
+
+                            Array.from(ReqResponse).map((res, i) => {
+
                                 return (<>
-                               
-                                    <p key={i}>
-                                        
-                                    ({ReqResponse.length+i+1}) 
-                                    DateTime : {res.headers?.Date}<br/>
-                                    Response : <span style={{color:res.response.status==200? "green":"red"}}>  {res.response.data}</span><br/> 
-                                    Status Code : {res.response.status}<br/>
-                                    {/* Status Code value : {res.message}<br/> */}
-                                    <hr></hr>
+
+                                    <p key={i} >
+
+                                        ({i + 1})
+                                        {/* DateTime : {res.headers?.Date}<br /> */}
+                                        Response : <span style={{ color: res.statusCodeValue == 200 ? "green" : "red" }}>  {res.body}</span><span></span>Status Code : <strong><b>{res.statusCodeValue}</b></strong><br />
+
+
+                                        <hr></hr>
                                     </p>
-                                
+
 
                                 </>
-                                ) 
-                        })
+                                )
+                            })
+
                         }
+
                     </div>
-                    {/* <td>{i}</td>
-                    <td>{res.headers.Date}</td>
-                    <td style={{ color: 'red' }}>{res.body}</td>
-                    <td>{res.statusCode}</td>
-                    <td>{res.statusCodeValue}</td> */}
 
 
 
